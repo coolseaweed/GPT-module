@@ -1,6 +1,6 @@
 from notion_client import Client
 import json
-
+from tqdm import tqdm
 
 import dotenv
 import os
@@ -9,12 +9,12 @@ dotenv.load_dotenv()
 
 NOTION_TOKEN = os.getenv("NOTION_TOKEN")
 NOTION_DATABASE_ID = os.getenv("NOTION_DATABASE_ID")
-
+DATAPATH = "results.json"
 
 notion = Client(auth=NOTION_TOKEN)
 
 
-with open("results.json", "r", encoding="utf-8") as json_file:
+with open(DATAPATH, "r", encoding="utf-8") as json_file:
     data = json.load(json_file)
 
 
@@ -25,8 +25,7 @@ for item in data:
             item[key] = None
 
 
-for item in data:
-
+for item in tqdm(data):
     properties = {
         "이름": {"title": [{"text": {"content": item["이름"]}}]},
         "커리어": {"multi_select": [{"name": career} for career in item["커리어"]]},
@@ -35,10 +34,18 @@ for item in data:
         "특징": {"multi_select": [{"name": feature} for feature in item["특징"]]},
         "희망 파트너": {"multi_select": [{"name": partner} for partner in item["희망 파트너"]]},
         "경력": {"number": item["경력"]},
-        "링크드인": {"url": item.get("링크드인", None)},
-        "연락처": {"phone_number": item.get("연락처", None)},
-        "이메일": {"email": item.get("이메일", None)},
     }
+
+    if item.get("링크드인", None):
+        properties["링크드인"] = {"url": item["링크드인"]}
+
+    if item.get("연락처", None):
+        properties["연락처"] = {"phone_number": item["연락처"]}
+
+    if item.get("이메일", None):
+        properties["이메일"] = {"email": item["이메일"]}
+        if type(item["이메일"]) == list:
+            properties["이메일"] = {"email": item["이메일"][0]}
 
     if item.get("MBTI", None):
         properties["MBTI"] = {"select": {"name": item["MBTI"]}}
