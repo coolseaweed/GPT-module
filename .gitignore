@@ -1,2 +1,5 @@
 .env
 *.csv
+*.json
+data/*
+results/*
